@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.CodeAnalysis.CSharp.Formatting;
 
 class FormatSolution
 {
@@ -45,7 +46,18 @@ class FormatSolution
                 continue;
             }
 
-            var newDocument = Formatter.FormatAsync(document).GetAwaiter().GetResult();
+            var workspace = document.Project.Solution.Workspace;
+            var options = workspace.Options;
+            options = options.WithChangedOption(CSharpFormattingOptions.IndentSwitchSection, false);
+            options = options.WithChangedOption(CSharpFormattingOptions.LabelPositioning, LabelPositionOptions.LeftMost);
+            options = options.WithChangedOption(CSharpFormattingOptions.NewLineForCatch, false);
+            options = options.WithChangedOption(CSharpFormattingOptions.NewLineForClausesInQuery, false);
+            options = options.WithChangedOption(CSharpFormattingOptions.NewLineForElse, false);
+            options = options.WithChangedOption(CSharpFormattingOptions.NewLineForFinally, false);
+            options = options.WithChangedOption(CSharpFormattingOptions.NewLinesForBracesInControlBlocks, false);
+            options = options.WithChangedOption(CSharpFormattingOptions.SpaceAfterCast, true);
+
+            var newDocument = Formatter.FormatAsync(document, options).GetAwaiter().GetResult();
             if (newDocument != document && newDocument.GetTextAsync().Result.ToString() != document.GetTextAsync().Result.ToString())
             {
                 Write("Formatting: " + document.FilePath);
